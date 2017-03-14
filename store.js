@@ -1,30 +1,16 @@
-import {createStore, combineReducers, applyMiddleware} from 'redux'
-import thunkMiddleware from 'redux-thunk'
+import {createStore, compose, combineReducers, applyMiddleware} from 'redux'
+import thunk from 'redux-thunk'
 
-const quotes = (state = [], action) => {
-  switch (action.type) {
-    case 'GET_QUOTES_FROM_DB':
-      return action.quotes
-    default:
-      return state;
-  }
-}
+import rootReducer from './reducer/rootReducer'
 
-const logger = store => next => action => {
-  if(window.console){
-    console.group('logger')
-    console.log('currentState: ', store.getState())
-    console.log('dispatchedAction: ', action)
-    next(action)
-    console.log('updatedState: ', store.getState())
-    console.groupEnd('logger')
-  }
-}
+//logger
+import createLogger from 'redux-logger';
+const logger = createLogger();
 
-const rootReducer = combineReducers({
-  quotes
-})
+const enhancers = compose(
+  typeof window !== 'undefined' && process.env.NODE_ENV !== 'production' ? window.devToolsExtension && window.devToolsExtension() : f => f
+)
 
-export const initStore = (initialState) => {
-  return createStore(rootReducer, initialState, applyMiddleware(thunkMiddleware, logger))
-}
+const createStoreWithMiddleware = applyMiddleware(thunk, logger)(createStore)
+
+export const initStore = (initialState) => createStoreWithMiddleware(rootReducer, initialState, enhancers)
